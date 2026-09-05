@@ -27,7 +27,7 @@ public class AirportController {
         return ResponseEntity.ok(airportService.getById(id));
     }
 
-    @PostMapping
+    @PostMapping("/new-airport")
     public ResponseEntity<AirportResponse> create(@Valid @RequestBody AirportRequest request) {
         return ResponseEntity.status
                         (HttpStatus.CREATED)

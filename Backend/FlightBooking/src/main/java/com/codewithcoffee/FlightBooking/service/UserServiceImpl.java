@@ -32,4 +32,6 @@ public class UserServiceImpl implements UserDetailsService {
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())))
                 .build();
     }
+
+
 }

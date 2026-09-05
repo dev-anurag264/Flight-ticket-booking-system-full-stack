@@ -3,6 +3,7 @@ package com.codewithcoffee.FlightBooking.service;
 import com.codewithcoffee.FlightBooking.dto.airportdto.AirportRequest;
 import com.codewithcoffee.FlightBooking.dto.airportdto.AirportResponse;
 import com.codewithcoffee.FlightBooking.entity.Airport;
+import com.codewithcoffee.FlightBooking.exceptions.ApiException;
 import com.codewithcoffee.FlightBooking.mapper.AirportMapper;
 import com.codewithcoffee.FlightBooking.repository.AirportRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class AirportService {
     public AirportResponse create(AirportRequest request) {
         String code = request.getIataCode().toUpperCase();
         if (airportRepository.existsByIataCode(code)) {
-            throw new RuntimeException("Airport with this IATA code already exists");
+            throw new ApiException("Airport with this IATA code already exists", HttpStatus.CONFLICT);
         }
         Airport saved = airportRepository.save(airportMapper.toEntity(request));
         return airportMapper.toResponse(saved);
@@ -61,6 +62,6 @@ public class AirportService {
 
     private Airport findAirportOrThrow(Long id) {
         return airportRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Airport not found"));
+                .orElseThrow(() -> new ApiException("Airport not found", HttpStatus.NOT_FOUND));
     }
 }

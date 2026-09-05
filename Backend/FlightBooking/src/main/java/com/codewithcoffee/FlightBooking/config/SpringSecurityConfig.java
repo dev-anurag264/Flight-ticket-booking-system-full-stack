@@ -70,15 +70,13 @@ public class SpringSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/airports/**", "/api/flights/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-//                .authorizeHttpRequests(
-//                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-//                .requestMatchers(HttpMethod.GET, "/api/airports/**", "/api/flights/**").permitAll()
-//                .requestMatchers(HttpMethod.POST, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.PUT, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.DELETE, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
-//                .anyRequest().authenticated()
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
