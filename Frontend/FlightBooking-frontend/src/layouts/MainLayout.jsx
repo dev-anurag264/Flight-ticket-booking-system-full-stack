@@ -1,6 +1,5 @@
 import { useAuth } from "../auth/useAuth";
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, Link } from "react-router-dom";
 export default function MainLayout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -17,6 +16,20 @@ export default function MainLayout({ children }) {
           Flight-Booking-Portal
         </span>
         <div className="flex items-center gap-4">
+          <Link
+            to="/search"
+            className="text-sm text-gray-700 hover:text-blue-600"
+          >
+            Search Flights
+          </Link>
+          {user?.role === "ADMIN" && (
+            <Link
+              to="/admin/airports"
+              className="text-sm text-gray-700 hover:text-blue-600"
+            >
+              Admin
+            </Link>
+          )}
           <span className="text-sm text-gray-600">
             {user?.email} <span className="text-gray-400">({user?.role})</span>
           </span>
