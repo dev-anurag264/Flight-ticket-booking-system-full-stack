@@ -1,994 +1,115 @@
-# ✈️ AeroLock
+# Flight Ticket Booking & Distributed Seat Reservation System
 
-### High-Concurrency, Event-Driven Flight Reservation & Transaction Platform
+A flight reservation and booking platform built as a deep dive into production-grade backend architecture — not a CRUD tutorial project. AeroBook exists to explore, in a real codebase, the problems that actually separate junior from senior backend work: concurrency correctness, stateless authentication and authorization, clean architectural boundaries, and payment/booking consistency — introduced only when a genuine problem in the domain justifies them, never for their own sake.
 
-> **AeroLock** is a production-inspired flight reservation platform designed to model real-world backend and distributed-system challenges such as concurrent seat allocation, transactional booking workflows, payment consistency, distributed locking, asynchronous event processing, and fault-tolerant service communication.
+## Tech Stack
 
----
+**Backend:** Java 17, Spring Boot, Spring Security, JWT (stateless auth), Spring Data JPA / Hibernate, PostgreSQL, Maven, Lombok, Bean Validation, OpenAPI/Swagger, JUnit 5 + Mockito + Testcontainers
 
-## 📌 Overview
+**Frontend:** React, Vite, Axios, React Router, Tailwind CSS, React Hook Form + Zod
 
-AeroLock is an end-to-end flight booking platform built with a focus on **backend engineering, concurrency, distributed transactions, event-driven architecture, and scalability** rather than simple CRUD operations.
+**Tools Used for tackling real world issue:** Redis, Kafka, Bucket4j, Docker, Spring Cloud Gateway, Resilience4j, Prometheus, Grafana, OpenTelemetry, AWS
 
-The platform supports the complete reservation lifecycle:
+## Architecture
 
-```text
-Search Flight
-     ↓
-Select Flight
-     ↓
-Select Seat
-     ↓
-Temporarily Lock Seat
-     ↓
-Create Booking
-     ↓
-Process Payment
-     ↓
-Confirm Booking
-     ↓
-Generate Ticket
-     ↓
-Send Notification
+This project is built as a **modular monolith** .A single deployable application with clean internal boundaries, deliberately *not* microservices from day one. The reasoning: a modular monolith forces good separation of concerns before paying the operational cost of distributed systems, and any future service extraction  should be justified by a real scaling or team-ownership problem, not adopted because "microservices" looks impressive on paper.
+
+```
+React (Vite) SPA — Axios + JWT
+        │  HTTPS / REST (JSON)
+        ▼
+Spring Boot Application
+  Security (stateless JWT filter, role-based access)
+  Controller → Service → Repository (layered, not feature-scattered)
+  PostgreSQL
 ```
 
-The system is designed to address challenging scenarios such as:
+**Package structure is layer-based** (`controller/`, `service/`, `repository/`, `dto/`, `entity/`, `mapper/`), a deliberate choice over feature-based packaging for a project at this scale — it keeps all controllers, all entities, etc. visible at a glance, at the cost of relying on naming conventions rather than folder boundaries to signal feature ownership. That trade-off is a conscious one, not an oversight.
 
-- Multiple users attempting to book the same seat
-- Payment failures after seat reservation
-- Duplicate payment requests
-- Temporary seat holds and expiration
-- Cross-service transaction consistency
-- Asynchronous event processing
-- Service failures and retries
-- Cache consistency
-- Secure API access
+## Key Design Decisions
 
----
+- **Stateless JWT authentication** — no server-side session state, so the app can scale horizontally without sticky sessions or a shared session store. The trade-off (no instant token revocation) is accepted deliberately for this phase, with short expiry as the current mitigation.
+- **DTOs everywhere, no entity ever crosses the API boundary** — decouples the persistence model from the API contract; a schema change never silently breaks a client.
+- **Role-based authorization differentiated by HTTP method, not URL prefix** — `GET /api/flights` is public, `POST/PUT/DELETE` on the same resource require `ROLE_ADMIN`. Keeps one clean URL per resource instead of parallel `/admin/...` routes.
+- **Optimistic locking for seat concurrency** (`@Version`) rather than pessimistic locking — seat contention is the rare case, not the common one, so a zero-cost-until-conflict strategy beats one that pays a blocking cost on every request.
+- **BigDecimal for all monetary values**, never floating point — exact decimal arithmetic is non-negotiable for currency.
+- **Cross-field validation via Bean Validation's `@AssertTrue`** (e.g., a flight's origin and destination airports must differ) rather than ad-hoc service-layer checks scattered across the codebase.
 
-# 🏗️ System Architecture
+## Testing Strategy
 
-AeroLock follows a **microservices-oriented, event-driven architecture** where business capabilities are separated into independently deployable services.
+Every feature ships with three testing layers, applied in order of increasing cost:
 
-```text
-                         ┌─────────────────────┐
-                         │   Web / Mobile App  │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │     API Gateway     │
-                         └──────────┬──────────┘
-                                    │
-             ┌──────────────────────┼──────────────────────┐
-             │                      │                      │
-             ▼                      ▼                      ▼
-      ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-      │ Auth / User │       │   Flight    │       │  Inventory  │
-      │   Service   │       │   Service   │       │   Service   │
-      └─────────────┘       └─────────────┘       └──────┬──────┘
-                                                         │
-                                                         ▼
-                                                  ┌─────────────┐
-                                                  │   Booking   │
-                                                  │   Service   │
-                                                  └──────┬──────┘
-                                                         │
-                             ┌───────────────────────────┼──────────────────────┐
-                             │                           │                      │
-                             ▼                           ▼                      ▼
-                      ┌─────────────┐             ┌─────────────┐       ┌─────────────┐
-                      │   Payment   │             │   Ticket    │       │Notification │
-                      │   Service   │             │   Service   │       │   Service   │
-                      └─────────────┘             └─────────────┘       └─────────────┘
+1. **Unit tests** (JUnit + Mockito) — service-layer business logic, fully mocked dependencies, no Spring context.
+2. **Slice tests** (`@WebMvcTest`) — HTTP layer correctness (status codes, validation, JSON shape, role-based authorization), service mocked out.
+3. **Integration tests** (`@SpringBootTest` + Testcontainers) — real Spring wiring against a real, ephemeral PostgreSQL container, reserved for behavior the first two layers structurally cannot verify (real unique constraints, the full security filter chain).
 
-                             ┌────────────────────────────────────┐
-                             │               Kafka                │
-                             │        Event Streaming Bus         │
-                             └────────────────────────────────────┘
+## Roadmap
 
-                  ┌──────────────────────┐       ┌──────────────────────┐
-                  │      PostgreSQL      │       │        Redis         │
-                  │   Persistent Data    │       │ Cache + Seat Locks   │
-                  └──────────────────────┘       └──────────────────────┘
+| Phase | Focus | Status |
+|---|---|---|
+| 1 | Authentication (JWT, roles, protected routes) |
+| 2 | Airport & Flight management, customer search | 
+| 3 | Seat inventory, concurrency-safe reservation | 
+| 4 | Temporary seat hold state machine | Planned |
+| 5 | Booking, PNR, cancellation | Planned |
+| 6 | Simulated payment, idempotency | Planned |
+| 7 | Notifications (simulated) | Planned |
+| 8 | Redis (caching, holds, rate limiting) | Planned |
+| 9 | Rate limiting (Bucket4j) | Planned |
+| 10 | Kafka (event-driven workflows) | Planned |
+| 11 | Transactional Outbox pattern | Planned |
+| 12 | Microservices extraction (only if justified) | Planned |
+| 13 | API Gateway | Planned |
+| 14 | Resilience (timeout, retry, circuit breaker) | Planned |
+| 15 | Docker & AWS deployment | Planned |
+| 16 | Observability (Prometheus, Grafana, OpenTelemetry) | Planned |
+
+## Project Structure
+
 ```
-
----
-
-# 🧩 Microservices
-
-| Service | Responsibility |
-|---|---|
-| **API Gateway** | Routing, authentication filters, centralized entry point |
-| **Auth/User Service** | Registration, login, JWT, roles, user profiles |
-| **Flight Service** | Flights, airports, aircraft, schedules, fares |
-| **Inventory Service** | Seat inventory, availability, seat locking/release |
-| **Booking Service** | Booking lifecycle, PNR, passengers, cancellation |
-| **Payment Service** | Payment processing, status, refunds |
-| **Ticket Service** | Ticket and e-ticket generation |
-| **Notification Service** | Booking, payment and cancellation notifications |
-
-Each service follows clear **bounded responsibilities** and owns its business logic.
-
----
-
-# 🔐 Concurrent Seat Reservation
-
-One of the primary engineering challenges is preventing **double booking under concurrent requests**.
-
-Consider two users attempting to reserve the same seat:
-
-```text
-                    Flight 6E-201
-                         │
-                       Seat 12A
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-           User A                User B
-              │                     │
-           Request                 Request
-              │                     │
-              └──────────┬──────────┘
-                         ▼
-                 Concurrency Control
-                         │
-                  ┌──────┴──────┐
-                  │             │
-               Success         Reject
-                  │             │
-               User A          User B
-```
-
-The reservation workflow must guarantee:
-
-> **One flight seat can have at most one confirmed booking.**
-
-Potential mechanisms used by the system include:
-
-- Optimistic locking
-- Pessimistic database locking
-- Redis distributed locking
-- Database unique constraints
-- Transactional boundaries
-
-The exact mechanism depends on the reservation operation and consistency requirements.
-
----
-
-# 🔒 Temporary Seat Locking
-
-A seat should not remain permanently unavailable when a user abandons the payment process.
-
-A temporary reservation can be represented as:
-
-```text
-User selects Seat
-       ↓
-Acquire Seat Lock
-       ↓
-TTL / Expiration Window
-       ↓
- ┌─────┴─────┐
- │           │
- ▼           ▼
-Payment     Timeout
-Success       │
- │            ▼
- ▼        Release Seat
-Confirm
-Booking
-```
-
-Redis can be used to maintain short-lived seat locks with expiration.
-
-Example conceptual key:
-
-```text
-seat:{flightId}:{seatNumber}
-```
-
----
-
-# 🔄 Distributed Booking Transaction
-
-A flight booking spans multiple business operations and potentially multiple services.
-
-```text
-Create Booking
-      ↓
-Reserve Seat
-      ↓
-Initiate Payment
-      ↓
-Payment Successful
-      ↓
-Confirm Booking
-      ↓
-Generate Ticket
-      ↓
-Send Notification
-```
-
-A failure may require compensating actions:
-
-```text
-Reserve Seat
-      ↓
-Process Payment
-      ↓
-   PAYMENT FAILED
-      ↓
-Release Seat
-      ↓
-Cancel / Expire Booking
-```
-
-AeroLock uses the **Saga Pattern** to model distributed business transactions without requiring a single distributed database transaction.
-
----
-
-# 🔄 Saga Pattern
-
-The booking workflow can be represented as a Saga:
-
-```text
-                     Booking Saga
-                          │
-                          ▼
-                   Create Booking
-                          │
-                          ▼
-                     Lock Seat
-                          │
-                          ▼
-                   Process Payment
-                    /           \
-                   /             \
-              Success           Failure
-                 │                 │
-                 ▼                 ▼
-          Confirm Booking      Release Seat
-                 │                 │
-                 ▼                 ▼
-          Generate Ticket    Cancel Booking
-                 │
-                 ▼
-          Send Notification
-```
-
-Each service manages its own local transaction and participates in the overall business workflow through commands and events.
-
----
-
-# 📨 Event-Driven Architecture
-
-Apache Kafka is used for asynchronous communication between services.
-
-Example:
-
-```text
-                    Booking Service
-                           │
-                           │ BookingConfirmed
-                           ▼
-                         Kafka
-                    ┌──────┼──────┐
-                    │      │      │
-                    ▼      ▼      ▼
-                 Ticket  Notification
-                 Service    Service
-```
-
-### Domain Events
-
-```text
-BookingCreated
-SeatLocked
-SeatReleased
-PaymentInitiated
-PaymentCompleted
-PaymentFailed
-BookingConfirmed
-BookingCancelled
-TicketGenerated
-NotificationRequested
-```
-
-Event-driven communication helps reduce synchronous coupling between services and allows independent consumers to react to domain events.
-
----
-
-# ⚡ Redis
-
-Redis is used for low-latency operations such as:
-
-### Flight Search Caching
-
-```text
-Client
-  │
-  ▼
-Flight Search API
-  │
-  ▼
-Redis
-  │
-  ├── Cache Hit ──► Return Result
-  │
-  └── Cache Miss ──► PostgreSQL
-                         │
-                         ▼
-                     Update Cache
-```
-
-### Temporary Seat Locks
-
-```text
-Seat Selection
-      ↓
-Redis Lock
-      ↓
-Expiration / TTL
-      ↓
- ┌────┴─────┐
- │          │
- ▼          ▼
-Payment    Timeout
-Success      │
- │           ▼
- ▼       Release Lock
-Confirm
-Booking
-```
-
-Redis is therefore used for both **performance optimization** and **short-lived reservation state**, rather than being treated as the primary persistent database.
-
----
-
-# 💳 Payment Processing
-
-The payment subsystem is designed around abstractions so that the core booking workflow does not depend directly on a particular payment provider.
-
-```text
-                 Payment Service
-                        │
-                        ▼
-                 Payment Strategy
-                /       |        \
-               /        |         \
-              ▼         ▼          ▼
-           Card        UPI       Wallet
-          Payment     Payment     Payment
-```
-
-External providers can be integrated through adapters:
-
-```text
-Application
-     │
-     ▼
-Payment Gateway
-     │
-     ├── Razorpay Adapter
-     ├── Stripe Adapter
-     └── Mock Payment Adapter
-```
-
-This keeps external provider-specific logic isolated from the core domain logic.
-
----
-
-# 🔁 Idempotency
-
-Payment and booking APIs must be safe against duplicate requests caused by retries, network failures, or client resubmission.
-
-Example:
-
-```http
-POST /api/v1/payments
-
-Idempotency-Key: abc123
-```
-
-First request:
-
-```text
-Request
-  ↓
-Payment Service
-  ↓
-Create Payment
-```
-
-Retry with the same key:
-
-```text
-Request
-  ↓
-Payment Service
-  ↓
-Existing Transaction
-  ↓
-Return Existing Result
-```
-
-This prevents accidental duplicate payment processing.
-
----
-
-# 🔐 Security
-
-AeroLock uses **Spring Security** for API authentication and authorization.
-
-### Authentication Flow
-
-```text
-Username / Password
-        ↓
-Authentication
-        ↓
-JWT Access Token
-        ↓
-Authenticated API Request
-        ↓
-JWT Validation
-        ↓
-Authorization
-```
-
-### Security Features
-
-- JWT authentication
-- BCrypt password hashing
-- Role-based access control
-- Stateless authentication
-- Authentication filters
-- Request validation
-- Secure API endpoints
-- Centralized exception handling
-
-Example roles:
-
-```text
-PASSENGER
-ADMIN
-```
-
----
-
-# ✈️ Core Features
-
-## Passenger Features
-
-- User registration and login
-- JWT authentication
-- Flight search
-- Flight filtering and sorting
-- Flight details
-- Seat availability
-- Seat selection
-- Temporary seat reservation
-- Booking creation
-- Multiple passenger support
-- Payment processing
-- Ticket generation
-- Booking history
-- Booking cancellation
-- Refund processing
-- Notifications
-
-## Administrative Features
-
-- Airport management
-- Aircraft management
-- Aircraft seat configuration
-- Flight management
-- Flight scheduling
-- Fare management
-- Flight status management
-- Inventory management
-- Booking management
-
----
-
-# 🔎 Flight Search
-
-The search API supports:
-
-- Origin and destination
-- Departure date
-- Passenger count
-- Cabin class
-- Price filtering
-- Duration filtering
-- Departure-time filtering
-- Sorting
-- Pagination
-
-Example:
-
-```http
-GET /api/v1/flights/search
-```
-
-Example query:
-
-```text
-origin=DEL
-destination=BLR
-departureDate=2026-10-15
-passengers=2
-cabinClass=ECONOMY
-```
-
-Frequently accessed search results can be cached using Redis.
-
----
-
-# 💺 Flight Inventory Model
-
-AeroLock separates static aircraft configuration from flight-specific inventory.
-
-```text
-Aircraft
-   │
-   └── Seat Configuration
-             │
-             ▼
-           Flight
-             │
-             ▼
-       Flight Inventory
-             │
-             ▼
-        Seat Status
-```
-
-This allows the same aircraft configuration to be reused across different flights while maintaining independent seat availability for every flight.
-
----
-
-# 🗃️ Data Model
-
-Core entities include:
-
-```text
-User
-Airport
-Aircraft
-AircraftSeat
-Flight
-FlightSeat
-Fare
-Booking
-BookingPassenger
-Payment
-Refund
-Ticket
-```
-
-High-level relationships:
-
-```text
-User
- │
- └──────────► Booking
-                 │
-                 ├────────► Passenger
-                 │
-                 ├────────► Payment
-                 │
-                 └────────► Ticket
-
-Airport ───────► Flight ◄────── Aircraft
-                   │
-                   ▼
-              FlightSeat
-```
-
----
-
-# 📡 REST API
-
-## Authentication
-
-```text
-POST   /api/v1/auth/register
-POST   /api/v1/auth/login
-```
-
-## Flights
-
-```text
-GET    /api/v1/flights/search
-GET    /api/v1/flights/{id}
-```
-
-## Bookings
-
-```text
-POST   /api/v1/bookings
-GET    /api/v1/bookings/{id}
-GET    /api/v1/bookings/user/{userId}
-POST   /api/v1/bookings/{id}/cancel
-```
-
-## Payments
-
-```text
-POST   /api/v1/payments
-GET    /api/v1/payments/{id}
-POST   /api/v1/payments/{id}/refund
-```
-
-## Tickets
-
-```text
-GET    /api/v1/tickets/{id}
-```
-
-## Administration
-
-```text
-POST   /api/v1/admin/flights
-PUT    /api/v1/admin/flights/{id}
-DELETE /api/v1/admin/flights/{id}
-
-POST   /api/v1/admin/aircraft
-POST   /api/v1/admin/airports
-```
-
----
-
-# 🧩 Design Patterns
-
-AeroLock applies design patterns where they provide practical architectural value.
-
-| Pattern | Application |
-|---|---|
-| **Strategy Pattern** | Payment and processing strategies |
-| **Factory Pattern** | Creation of payment/notification processors |
-| **Builder Pattern** | Construction of complex domain/request objects |
-| **Adapter Pattern** | External payment provider integration |
-| **Facade Pattern** | Simplification of complex booking workflows |
-| **Repository Pattern** | Persistence abstraction |
-| **Observer / Event-Driven Pattern** | Kafka-based domain events |
-| **Saga Pattern** | Distributed transaction management |
-
----
-
-# 🧪 Testing Strategy
-
-Testing is performed at multiple levels.
-
-### Unit Testing
-
-- JUnit 5
-- Mockito
-
-### Integration Testing
-
-- Spring Boot Test
-- Testcontainers
-- PostgreSQL
-- Redis
-- Kafka
-
-### API Testing
-
-- Postman
-- OpenAPI / Swagger
-
-### Critical Test Scenarios
-
-```text
-✓ Successful booking
-✓ Concurrent seat booking
-✓ Seat already locked
-✓ Seat lock expiration
-✓ Payment failure
-✓ Duplicate payment request
-✓ Booking cancellation
-✓ Refund processing
-✓ Invalid JWT
-✓ Unauthorized API access
-✓ Invalid booking state
-✓ Kafka event processing
-```
-
----
-
-# 🐳 Containerization
-
-Application services and supporting infrastructure can be containerized using Docker.
-
-```text
-Docker Compose
-     │
-     ├── API Gateway
-     ├── Auth Service
-     ├── Flight Service
-     ├── Inventory Service
-     ├── Booking Service
-     ├── Payment Service
-     ├── Ticket Service
-     ├── Notification Service
-     │
-     ├── PostgreSQL
-     ├── Redis
-     └── Kafka
-```
-
----
-
-# 🔄 CI/CD
-
-The project is designed for automated build, test, analysis, and deployment workflows.
-
-```text
-Developer
-    │
-    ▼
-Git Push
-    │
-    ▼
-GitHub
-    │
-    ▼
-CI Pipeline
-    │
-    ├── Compile
-    ├── Unit Tests
-    ├── Integration Tests
-    ├── Static Analysis
-    ├── Docker Build
-    │
-    ▼
-Docker Image
-    │
-    ▼
-Deployment
-```
-
-Potential tooling:
-
-- Git
-- GitHub
-- Jenkins
-- GitHub Actions
-- Docker
-- SonarQube
-
----
-
-# 📊 Observability
-
-The system is designed to support production-style observability.
-
-Potential components:
-
-- Spring Boot Actuator
-- Micrometer
-- Prometheus
-- Grafana
-- Structured logging
-- Correlation IDs
-- Distributed tracing
-
-Example request flow:
-
-```text
-Client
-  │
-  ▼
-API Gateway
-  │
-  ▼
-Booking Service
-  │
-  ▼
-Payment Service
-  │
-  ▼
-Kafka
-  │
-  ▼
-Notification Service
-```
-
-Correlation IDs can be propagated across services to trace a request through the distributed workflow.
-
----
-
-# 🛠️ Technology Stack
-
-| Category | Technologies |
-|---|---|
-| Language | Java |
-| Framework | Spring Boot |
-| Security | Spring Security, JWT |
-| API | REST, JSON, OpenAPI |
-| ORM | Hibernate, Spring Data JPA |
-| Database | PostgreSQL |
-| Cache / Locking | Redis |
-| Messaging | Apache Kafka |
-| Testing | JUnit 5, Mockito, Testcontainers |
-| Containerization | Docker, Docker Compose |
-| CI/CD | Jenkins, GitHub Actions |
-| Code Quality | SonarQube |
-| Cloud | AWS |
-| Monitoring | Actuator, Prometheus, Grafana |
-| Version Control | Git, GitHub |
-
----
-
-# 📁 Project Structure
-
-```text
-aerolock/
-│
-├── api-gateway/
-│
-├── auth-service/
-│
-├── flight-service/
-│
-├── inventory-service/
-│
-├── booking-service/
-│
-├── payment-service/
-│
-├── ticket-service/
-│
-├── notification-service/
-│
-├── infrastructure/
-│   ├── docker/
-│   └── docker-compose.yml
-│
-├── docs/
-│   ├── architecture/
-│   ├── database/
-│   └── api/
-│
+flightbooking/
+├── backend/                  # Spring Boot (Maven)
+│   └── src/main/java/com/coffeeandcoding/
+│       ├── config/            # Security, CORS, OpenAPI config
+│       ├── security/           # JWT filter, JwtService, UserDetailsService
+│       ├── common/exception/    # GlobalExceptionHandler, ApiException
+│       ├── entity/              # JPA entities
+│       ├── repository/           # Spring Data JPA repositories
+│       ├── dto/                   # Request/response contracts
+│       ├── mapper/                 # Entity ↔ DTO translation
+│       ├── service/                 # Business logic
+│       └── controller/               # REST endpoints
+├── frontend/                  # React + Vite
+│   └── src/
+│       ├── api/                # Axios client + per-resource API modules
+│       ├── auth/                # AuthContext, ProtectedRoute
+│       ├── pages/                 # auth/, admin/, customer/
+│       ├── layouts/
+│       └── router/
 └── README.md
 ```
 
----
+## Running Locally
 
-# 🚀 Getting Started
-
-## Prerequisites
-
-Make sure the following are installed:
-
-```text
-Java 21+
-Maven
-Docker
-Docker Compose
-Git
-```
-
-## Clone Repository
-
+**Backend**
 ```bash
-git clone https://github.com/<your-username>/aerolock.git
-
-cd aerolock
+cd backend
+mvn spring-boot:run
 ```
+Requires a running PostgreSQL instance and `JWT_SECRET` set as an environment variable (see `application.yml`).
 
-## Start Infrastructure
-
+**Frontend**
 ```bash
-docker compose up -d
+cd frontend
+npm install
+npm run dev
 ```
 
-## Build
+API documentation is available via Swagger UI at `/swagger-ui.html` once the backend is running.
 
-```bash
-mvn clean install
-```
+## Known Simplifications (documented deliberately, not accidentally)
 
-Start the required Spring Boot services according to the provided configuration.
+- Flights are currently modeled as standalone rows rather than generated instances of a recurring `FlightSchedule` template, a real airline system would separate "the 2pm Kolkata–Bengaluru service" (a schedule) from "that service on October 15th" (an instance). This was a conscious scope decision to keep Phase 2 focused on CRUD + search fundamentals before introducing that modeling complexity.
+- No airline/carrier entity yet — flight numbers don't yet encode a proper IATA carrier code. Flagged as a follow-up once the domain model needs it.
+- Admin accounts are currently seeded manually (direct DB update) rather than through a dedicated admin-provisioning flow.
 
----
-
-# ⚙️ Configuration
-
-Sensitive configuration should be supplied through environment variables or a secrets-management solution rather than committed to source control.
-
-Example:
-
-```text
-DATABASE_URL
-DATABASE_USERNAME
-DATABASE_PASSWORD
-
-REDIS_HOST
-REDIS_PORT
-
-KAFKA_BOOTSTRAP_SERVERS
-
-JWT_SECRET
-
-PAYMENT_API_KEY
-```
-
----
-
-# 🧠 Engineering Highlights
-
-AeroLock focuses on solving practical backend and distributed-system problems:
-
-- High-concurrency seat allocation
-- Race-condition prevention
-- Distributed locking
-- Transaction boundaries
-- Distributed transaction management
-- Saga orchestration
-- Event-driven architecture
-- Asynchronous processing
-- Idempotent APIs
-- Redis caching
-- Kafka event streaming
-- Database indexing
-- Optimistic and pessimistic locking
-- Fault handling and retries
-- Authentication and authorization
-- Containerized deployment
-- CI/CD automation
-- Observability and distributed tracing
-
----
-
-# 📈 Future Improvements
-
-- Dynamic fare pricing
-- Multi-airline support
-- Waitlist management
-- Loyalty/reward system
-- Advanced flight recommendation engine
-- API rate limiting
-- Circuit breaker with Resilience4j
-- Dead-letter Kafka topics
-- OpenTelemetry-based distributed tracing
-- Kubernetes deployment
-- Horizontal service autoscaling
-- Real-time flight status updates
-
----
-
-# 🎯 Project Objective
-
-AeroLock is intentionally designed beyond a traditional CRUD application.
-
-The primary engineering focus is:
-
-```text
-Concurrency
-     ↓
-Consistency
-     ↓
-Transactions
-     ↓
-Events
-     ↓
-Failure Handling
-     ↓
-Scalability
-```
-
-The project aims to demonstrate how a real-world reservation platform can maintain **correctness under concurrent traffic while coordinating distributed business workflows across multiple services**.
-
----
-
-## 👨‍💻 Author
-
-**Anurag Prasad**
-
-Java Backend / Full Stack Developer
-
-**Core Technologies:** Java • Spring Boot • Microservices • PostgreSQL • Redis • Kafka • Docker • AWS
