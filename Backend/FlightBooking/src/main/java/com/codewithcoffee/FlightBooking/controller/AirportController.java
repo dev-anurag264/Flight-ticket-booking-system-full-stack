@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/auth") //change to "api/airports"
+@RequestMapping("/api/airports") //change to "api/airports"
 @RequiredArgsConstructor
 public class AirportController {
     private final AirportService airportService;
