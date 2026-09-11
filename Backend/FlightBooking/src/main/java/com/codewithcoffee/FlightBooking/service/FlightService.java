@@ -12,6 +12,7 @@ import com.codewithcoffee.FlightBooking.repository.FlightRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,12 +53,13 @@ public class FlightService {
         return flightMapper.toResponse(findFlightOrThrow(id));
     }
 
+    @Transactional
     public FlightResponse updateStatus(Long id, FlightStatus newStatus) {
         Flight flight = findFlightOrThrow(id);
         flight.setStatus(newStatus);
         return flightMapper.toResponse(flight);
     }
-
+    @Transactional
     public void delete(Long id) {
         Flight flight = findFlightOrThrow(id);
         flightRepository.delete(flight);

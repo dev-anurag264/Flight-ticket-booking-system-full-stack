@@ -9,6 +9,7 @@ import com.codewithcoffee.FlightBooking.repository.AirportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class AirportService {
         Airport airport = findAirportOrThrow(id);
         return airportMapper.toResponse(airport);
     }
-
+    @Transactional
     public AirportResponse update(Long id, AirportRequest request) {
         Airport airport = findAirportOrThrow(id);
         String newCode = request.getIataCode().toUpperCase();
@@ -54,7 +55,7 @@ public class AirportService {
 
         return airportMapper.toResponse(airport);
     }
-
+    @Transactional
     public void delete(Long id) {
         Airport airport = findAirportOrThrow(id);
         airportRepository.delete(airport);
