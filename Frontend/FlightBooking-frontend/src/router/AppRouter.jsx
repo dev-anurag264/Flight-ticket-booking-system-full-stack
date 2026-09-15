@@ -8,6 +8,9 @@ import FlightSearchPage from "../pages/customer/FlightSearchPage";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import ManageAirports from "../pages/admin/ManageAirports";
 import ManageFlights from "../pages/admin/ManageFlights";
+import SeatSelectionPage from "../pages/customer/SeatSelectionPage";
+import PaymentPlaceholderPage from "../pages/customer/PaymentPlaceholderPage";
+import PassengerDetailsPage from "../pages/customer/PassengerDetailsPage";
 
 export default function AppRouter() {
   return (
@@ -32,6 +35,36 @@ export default function AppRouter() {
             <ProtectedRoute>
               <MainLayout>
                 <FlightSearchPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/flights/:flightId/seats"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <SeatSelectionPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking/passenger-details"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <PassengerDetailsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking/payment"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <PaymentPlaceholderPage />
               </MainLayout>
             </ProtectedRoute>
           }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { flightApi } from "../../api/flightapi";
+import { Link } from "react-router-dom";
 
 export default function FlightSearchPage() {
   const [form, setForm] = useState({ origin: "", destination: "", date: "" });
@@ -84,11 +85,16 @@ export default function FlightSearchPage() {
               <div>
                 <p className="font-bold">{f.flightNumber}</p>
                 <p className="text-sm text-gray-600">
-                  {f.origin.iataCode} → {f.destination.iataCode} ·{" "}
+                  {f.origin.iataCode} to {f.destination.iataCode} ·{" "}
                   {f.departureTime} - {f.arrivalTime}
                 </p>
               </div>
-              <p className="text-lg font-bold text-blue-600">₹{f.baseFare}</p>
+              <Link
+                to={`/flights/${f.id}/seats`}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Confirm Booking - ₹{f.baseFare}
+              </Link>
             </div>
           ))}
         </div>
