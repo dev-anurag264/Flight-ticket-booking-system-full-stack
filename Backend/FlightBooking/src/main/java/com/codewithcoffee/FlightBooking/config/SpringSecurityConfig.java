@@ -75,6 +75,7 @@ public class SpringSecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/airports/**", "/api/flights/**").hasRole("ADMIN")
+                        .requestMatchers("/api/seats/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

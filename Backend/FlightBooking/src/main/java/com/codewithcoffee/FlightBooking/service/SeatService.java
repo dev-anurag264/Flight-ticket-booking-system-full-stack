@@ -1,5 +1,7 @@
 package com.codewithcoffee.FlightBooking.service;
 
+import com.codewithcoffee.FlightBooking.config.ClockConfig;
+import com.codewithcoffee.FlightBooking.config.SeatHoldProperties;
 import com.codewithcoffee.FlightBooking.dto.SeatGenerationRequest;
 import com.codewithcoffee.FlightBooking.dto.SeatResponse;
 import com.codewithcoffee.FlightBooking.entity.Flight;
@@ -14,9 +16,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +34,8 @@ public class SeatService {
     private final SeatRepository seatRepository;
     private final FlightRepository flightRepository;
     private final SeatMapper seatMapper;
+    private final SeatHoldProperties seatHoldProperties;
+    private final Clock clock;
 
     @Transactional
     public List<SeatResponse> generateSeats(Long flightId, SeatGenerationRequest request){
@@ -42,8 +49,7 @@ public class SeatService {
                     "seatsPerRow cannot exceed " + SEAT_LETTERS.length, HttpStatus.BAD_REQUEST);
         }
         List<Seat> seats = new ArrayList<>();
-        int row = 3;
-        int economyRow = 20;
+        int row = 1;
 
         row = buildRows(flight, SeatClass.BUSINESS, request.getBusinessRows(), request.getSeatsPerRow(), row, seats);
 
@@ -51,12 +57,32 @@ public class SeatService {
         log.info("Returned value of buildRows "+ i);
         try {
             List<Seat> saved = seatRepository.saveAll(seats);
-            seatRepository.flush(); // force the insert (and constraint check) now, inside this try block
+            seatRepository.flush(); // force insert
             return saved.stream().map(seatMapper::toResponse).toList();
         } catch (DataIntegrityViolationException ex) {
             throw new ApiException( "Seats already generated for this flight",HttpStatus.CONFLICT);
         }
 
+    }
+
+    @Transactional
+    public SeatResponse holdSeat(Long seatId) {
+        Seat seat = seatRepository.findById(seatId)
+                .orElseThrow(() -> new ApiException("Seat does not exist", HttpStatus.NOT_FOUND));
+
+        if (seat.getStatus() != SeatStatus.AVAILABLE) {
+            throw new ApiException("Seat is not available", HttpStatus.CONFLICT);
+        }
+
+        seat.setStatus(SeatStatus.HELD);
+        seat.setHoldExpiresAt(LocalDateTime.now(clock).plusMinutes(seatHoldProperties.getDurationMinutes()));
+
+        try {
+            Seat saved = seatRepository.saveAndFlush(seat);
+            return seatMapper.toResponse(saved);
+        } catch (ObjectOptimisticLockingFailureException ex) {
+            throw new ApiException("Seat was just taken by another user please choose a different seat", HttpStatus.CONFLICT);
+        }
     }
 
     private int buildRows(Flight flight, SeatClass seatClass, int rowCount, int seatsPerRow, int startRow, List<Seat> seats) {

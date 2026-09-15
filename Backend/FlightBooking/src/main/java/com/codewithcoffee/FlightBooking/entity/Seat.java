@@ -3,6 +3,8 @@ package com.codewithcoffee.FlightBooking.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(
         name = "seats",
@@ -32,6 +34,9 @@ public class Seat {
     @Column(nullable = false, length = 20)
     @Builder.Default
     private SeatStatus status=SeatStatus.AVAILABLE;
+
+    @Column(name = "hold_expires_at")
+    private LocalDateTime holdExpiresAt;
 
     @Version
     @Column(nullable = false)
