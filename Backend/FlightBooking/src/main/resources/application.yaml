@@ -32,3 +32,8 @@ application:
       expiration: 86400000
       refresh-token:
         expiration: 604800000
+
+seat:
+  hold:
+    duration-minutes: 10
+    sweep-interval-ms: 30000
