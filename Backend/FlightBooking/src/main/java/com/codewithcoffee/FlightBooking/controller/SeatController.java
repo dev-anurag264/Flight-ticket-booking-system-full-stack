@@ -28,4 +28,6 @@ public class SeatController {
     public ResponseEntity<List<SeatResponse>> getSeats(@PathVariable Long flightId) {
         return ResponseEntity.ok(seatService.getSeatsForFlight(flightId));
     }
+
+
 }

@@ -38,6 +38,9 @@ public class Seat {
     @Column(name = "hold_expires_at")
     private LocalDateTime holdExpiresAt;
 
+    @Column(name = "held_by_user_id")
+    private Long heldByUserId;
+
     @Version
     @Column(nullable = false)
     private Long version;

@@ -42,6 +42,6 @@ public class GlobalException {
     body.put("timestamp", Instant.now().toString());
     body.put("status", status.value());
     body.put("message", message);
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED == status ? status : status).body(message == null ? body : body);
+    return ResponseEntity.status(status).body(body);
   }
 }
