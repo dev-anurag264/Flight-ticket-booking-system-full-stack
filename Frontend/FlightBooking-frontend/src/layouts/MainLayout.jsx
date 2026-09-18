@@ -1,6 +1,7 @@
 import { useAuth } from "../auth/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../components/ui/Button";
+import ThemeToggle from "../components/ui/ThemeToggle";
 
 export default function MainLayout({ children }) {
   const { user, isAuthenticated, logout } = useAuth();
@@ -8,12 +9,13 @@ export default function MainLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-paper-50">
-      <nav className="bg-white border-b border-slate-300/60 px-6 py-4 flex justify-between items-center">
+      <nav className="bg-surface border-b border-slate-300/60 px-6 py-4 flex justify-between items-center">
         <Link to="/" className="font-flight text-lg font-semibold text-ink-900">
           EaseFly
         </Link>
 
         <div className="flex items-center gap-5 text-sm">
+          <ThemeToggle />
           {isAuthenticated ? (
             <>
               <Link

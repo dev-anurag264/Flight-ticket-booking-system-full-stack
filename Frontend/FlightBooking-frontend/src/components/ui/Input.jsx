@@ -13,7 +13,7 @@ export default function Input({ label, error, className = "", id, ...props }) {
       <input
         id={inputId}
         className={`
-          w-full px-3 py-2.5 rounded-[var(--radius-control)] border bg-white text-sm
+          w-full px-3 py-2.5 rounded-[var(--radius-control)] border bg-surface text-sm
           placeholder:text-ink-400 transition-colors
           focus:outline-none focus:ring-2 focus:ring-ink-900/10 focus:border-ink-900
           ${error ? "border-rose-600" : "border-slate-300"}

@@ -14,11 +14,17 @@ export default function ManageFlights() {
     flightNumber: "",
     originAirportId: "",
     destinationAirportId: "",
-    departureTime: "",
-    arrivalTime: "",
+    departureDate: "",
+    departureTimeOfDay: "",
+    arrivalDate: "",
+    arrivalTimeOfDay: "",
     aircraftType: "",
     baseFare: "",
   });
+
+  function combineDateTime(date, time) {
+    return `${date}T${time}:00`; // matches LocalDateTime's expected ISO-local format
+  }
 
   useEffect(() => {
     loadData();
@@ -45,9 +51,15 @@ export default function ManageFlights() {
     setError("");
     try {
       await flightApi.create({
-        ...form,
+        flightNumber: form.flightNumber,
         originAirportId: Number(form.originAirportId),
         destinationAirportId: Number(form.destinationAirportId),
+        departureTime: combineDateTime(
+          form.departureDate,
+          form.departureTimeOfDay,
+        ),
+        arrivalTime: combineDateTime(form.arrivalDate, form.arrivalTimeOfDay),
+        aircraftType: form.aircraftType,
         baseFare: Number(form.baseFare),
       });
       setForm({
@@ -94,7 +106,7 @@ export default function ManageFlights() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-4 rounded shadow grid grid-cols-2 md:grid-cols-4 gap-3"
+        className="bg-surface p-4 rounded shadow grid grid-cols-2 md:grid-cols-4 gap-3"
       >
         <input
           placeholder="Flight Number"
@@ -143,20 +155,44 @@ export default function ManageFlights() {
           className="border rounded px-2 py-1"
         />
 
-        <input
-          type="datetime-local"
-          value={form.departureTime}
-          onChange={(e) => setForm({ ...form, departureTime: e.target.value })}
-          className="border rounded px-2 py-1"
-          required
-        />
-        <input
-          type="datetime-local"
-          value={form.arrivalTime}
-          onChange={(e) => setForm({ ...form, arrivalTime: e.target.value })}
-          className="border rounded px-2 py-1"
-          required
-        />
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="date"
+            value={form.departureDate}
+            onChange={(e) =>
+              setForm({ ...form, departureDate: e.target.value })
+            }
+            className="border rounded px-2 py-1"
+            required
+          />
+          <input
+            type="time"
+            value={form.departureTimeOfDay}
+            onChange={(e) =>
+              setForm({ ...form, departureTimeOfDay: e.target.value })
+            }
+            className="border rounded px-2 py-1"
+            required
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="date"
+            value={form.arrivalDate}
+            onChange={(e) => setForm({ ...form, arrivalDate: e.target.value })}
+            className="border rounded px-2 py-1"
+            required
+          />
+          <input
+            type="time"
+            value={form.arrivalTimeOfDay}
+            onChange={(e) =>
+              setForm({ ...form, arrivalTimeOfDay: e.target.value })
+            }
+            className="border rounded px-2 py-1"
+            required
+          />
+        </div>
 
         <input
           type="number"
@@ -181,7 +217,7 @@ export default function ManageFlights() {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <table className="w-full bg-white rounded shadow text-sm">
+        <table className="w-full bg-surface rounded shadow text-sm">
           <thead>
             <tr className="text-left border-b">
               <th className="p-2">Flight</th>

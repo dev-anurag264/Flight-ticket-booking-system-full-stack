@@ -93,7 +93,7 @@ export default function PassengerDetailsPage() {
       <h1 className="text-2xl font-bold">Passenger Details</h1>
 
       {flight && (
-        <div className="bg-white p-4 rounded shadow flex justify-between items-center">
+        <div className="bg-surface p-4 rounded shadow flex justify-between items-center">
           <div>
             <p className="font-bold">{flight.flightNumber}</p>
             <p className="text-sm text-gray-600">
@@ -113,7 +113,7 @@ export default function PassengerDetailsPage() {
 
       <form
         onSubmit={handleContinue}
-        className="bg-white p-4 rounded shadow space-y-4"
+        className="bg-surface p-4 rounded shadow space-y-4"
       >
         <h2 className="font-semibold text-gray-800">Passenger</h2>
 

@@ -71,7 +71,7 @@ export default function SeatSelectionPage() {
   }
 
   const statusStyles = {
-    AVAILABLE: "bg-white border-gray-300 hover:bg-blue-50 cursor-pointer",
+    AVAILABLE: "bg-surface border-gray-300 hover:bg-blue-50 cursor-pointer",
     HELD: "bg-yellow-100 border-yellow-300 cursor-not-allowed opacity-60",
     PAYMENT_PENDING:
       "bg-orange-100 border-orange-300 cursor-not-allowed opacity-60",
@@ -89,7 +89,7 @@ export default function SeatSelectionPage() {
 
       <div className="flex gap-4 text-sm">
         <span className="flex items-center gap-1">
-          <span className="w-4 h-4 bg-white border border-gray-300 rounded"></span>{" "}
+          <span className="w-4 h-4 bg-surface border border-gray-300 rounded"></span>{" "}
           Available
         </span>
         <span className="flex items-center gap-1">

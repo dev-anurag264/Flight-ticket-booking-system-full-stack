@@ -69,7 +69,7 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="max-w-xl bg-white p-6 rounded shadow space-y-4">
+    <div className="max-w-xl bg-surface p-6 rounded shadow space-y-4">
       <h1 className="text-2xl font-bold">
         {step === "booking" ? "Review & Book" : "Payment"}
       </h1>

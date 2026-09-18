@@ -11,7 +11,7 @@ export default function BookingConfirmationPage() {
   }
 
   return (
-    <div className="max-w-xl bg-white p-6 rounded shadow space-y-4 text-center">
+    <div className="max-w-xl bg-surface p-6 rounded shadow space-y-4 text-center">
       <h1 className="text-2xl font-bold text-green-600">Booking Confirmed!</h1>
       <p className="text-gray-600">Your PNR</p>
       <p className="text-4xl font-mono font-bold tracking-widest">

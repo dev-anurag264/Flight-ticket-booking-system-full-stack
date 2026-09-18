@@ -1,31 +1,19 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
-
-const TABS = [
-  { path: "/admin/airports", label: "Airports" },
-  { path: "/admin/flights", label: "Flights" },
-];
+import { Outlet } from "react-router-dom";
+import ThemeToggle from "../../components/ui/ThemeToggle";
+import AdminSidebar from "./AdminSidebar";
 
 export default function AdminDashboard() {
-  const location = useLocation();
-
   return (
-    <div>
-      <div className="flex gap-4 border-b mb-6">
-        {TABS.map((tab) => (
-          <Link
-            key={tab.path}
-            to={tab.path}
-            className={`pb-2 px-1 ${
-              location.pathname === tab.path
-                ? "border-b-2 border-blue-600 text-blue-600 font-medium"
-                : "text-gray-500"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
+    <div className="flex -mx-6 -mt-6">
+      {" "}
+      {/* cancels MainLayout's default padding for a true full-height sidebar */}
+      <AdminSidebar />
+      <div className="flex-1 p-6">
+        <div className="flex justify-end mb-4">
+          <ThemeToggle />
+        </div>
+        <Outlet />
       </div>
-      <Outlet />
     </div>
   );
 }

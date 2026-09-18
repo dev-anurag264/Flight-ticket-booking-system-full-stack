@@ -43,7 +43,7 @@ export default function AirportSelector({ label, value, onChange, exclude }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full text-left px-3 py-2.5 rounded-[var(--radius-control)] border border-slate-300 bg-white hover:border-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-900/10 focus:border-ink-900"
+        className="w-full text-left px-3 py-2.5 rounded-[var(--radius-control)] border border-slate-300 bg-surface hover:border-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-900/10 focus:border-ink-900"
       >
         {selected ? (
           <span>
@@ -58,7 +58,7 @@ export default function AirportSelector({ label, value, onChange, exclude }) {
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-1 w-80 bg-white border border-slate-300 rounded-[var(--radius-card)] shadow-lg overflow-hidden">
+        <div className="absolute z-20 mt-1 w-80 bg-surface border border-slate-300 rounded-[var(--radius-card)] shadow-lg overflow-hidden">
           <input
             autoFocus
             placeholder="Search city or airport code"

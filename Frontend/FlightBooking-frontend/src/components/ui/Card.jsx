@@ -1,7 +1,7 @@
 export default function Card({ className = "", children, ...props }) {
   return (
     <div
-      className={`bg-white rounded-[var(--radius-card)] border border-slate-300/60 ${className}`}
+      className={`bg-surface rounded-[var(--radius-card)] border border-slate-300/60 ${className}`}
       {...props}
     >
       {children}

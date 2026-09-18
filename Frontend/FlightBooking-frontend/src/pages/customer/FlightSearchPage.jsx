@@ -149,7 +149,7 @@ export default function FlightSearchPage() {
                   setOrigin(r.origin);
                   setDestination(r.destination);
                 }}
-                className="font-flight text-sm px-3 py-1.5 rounded-full border border-slate-300 bg-white hover:border-ink-400 text-ink-700"
+                className="font-flight text-sm px-3 py-1.5 rounded-full border border-slate-300 bg-surface hover:border-ink-400 text-ink-700"
               >
                 {r.origin} <span className="text-ink-400">→</span>{" "}
                 {r.destination}
