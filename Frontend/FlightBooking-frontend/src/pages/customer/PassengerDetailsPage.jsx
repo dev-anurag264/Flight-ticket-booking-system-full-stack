@@ -28,13 +28,13 @@ const MEAL_OPTIONS = [
 export default function PassengerDetailsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { seat, flightId } = location.state || {};
+  const { seat, flightId, travelerName: incomingName } = location.state || {};
 
   const [flight, setFlight] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [passenger, setPassenger] = useState({
-    name: "",
+    name: incomingName || "",
     age: "",
     gender: "MALE",
   });

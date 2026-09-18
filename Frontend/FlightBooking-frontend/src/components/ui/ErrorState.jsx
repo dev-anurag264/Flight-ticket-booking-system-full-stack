@@ -1,7 +1,15 @@
 const ERROR_COPY = {
   NETWORK: {
-    title: "Can't reach Website right now",
+    title: "Can't reach AeroBook right now",
     description: "Check your connection and try again.",
+  },
+  LOGIN_FAILED: {
+    title: "Incorrect email or password",
+    description: "Double-check your details and try again.",
+  },
+  EMAIL_TAKEN: {
+    title: "That email is already registered",
+    description: "Try logging in instead.",
   },
   UNAUTHORIZED: {
     title: "Your session has expired",
@@ -25,23 +33,25 @@ const ERROR_COPY = {
   },
 };
 
-export function classifyError(err) {
+export function classifyError(err, context) {
   if (!err?.response) return "NETWORK";
   const status = err.response.status;
-  const message = err.response.data?.message || "";
+  const message = (err.response.data?.message || "").toLowerCase();
+
+  if (context === "login" && status === 401) return "LOGIN_FAILED";
+  if (context === "register" && status === 409) return "EMAIL_TAKEN";
   if (status === 401) return "UNAUTHORIZED";
   if (status === 403) return "FORBIDDEN";
   if (status === 404) return "NOT_FOUND";
-  if (status === 409 && message.toLowerCase().includes("seat"))
-    return "SEAT_CONFLICT";
+  if (status === 409 && message.includes("seat")) return "SEAT_CONFLICT";
   return "GENERIC";
 }
 
-export default function ErrorState({ error, action }) {
-  const kind = classifyError(error);
+export default function ErrorState({ error, context, action }) {
+  const kind = classifyError(error, context);
   const copy = ERROR_COPY[kind];
   return (
-    <div className="bg-rose-50 border border-rose-600/20 rounded-(--radius-card) p-4">
+    <div className="bg-rose-50 border border-rose-600/20 rounded-[var(--radius-card)] p-4">
       <p className="text-rose-600 font-medium text-sm">{copy.title}</p>
       <p className="text-ink-600 text-sm mt-0.5">{copy.description}</p>
       {action && <div className="mt-3">{action}</div>}

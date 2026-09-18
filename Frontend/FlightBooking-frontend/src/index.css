@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
 
 @theme {
   /* Color system — "Departure Board" direction: ink + paper + one amber accent */
@@ -28,7 +28,7 @@
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  /* Radius — intentionally small and consistent, not the generic "rounded-2xl everywhere" look */
+  /* Radius */
   --radius-card: 0.375rem;
   --radius-control: 0.25rem;
 }
@@ -43,7 +43,7 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Utility class for the flight-code/PNR/time monospace treatment used throughout */
+/* Utility class for flight-code/PNR/time monospace treatment */
 .font-flight {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
