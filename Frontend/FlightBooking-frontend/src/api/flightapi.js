@@ -8,4 +8,5 @@ export const flightApi = {
   updateStatus: (id, status) =>
     axiosClient.patch(`/flights/${id}/status`, { status }),
   delete: (id) => axiosClient.delete(`/flights/${id}`),
+  getStats: () => axiosClient.get("/flights/stats"),
 };

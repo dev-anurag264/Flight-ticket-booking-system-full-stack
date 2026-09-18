@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
@@ -14,6 +14,9 @@ import PassengerDetailsPage from "../pages/customer/PassengerDetailsPage";
 
 import BookingConfirmationPage from "../pages/customer/BookingConfirmationPage";
 import MyBookingsPage from "../pages/customer/MyBookingsPage";
+import FlightDetailsPage from "../pages/customer/FlightDetailsPage";
+import AdminOverviewPage from "../pages/admin/AdminOverviewPage";
+import AdminFlightLookupPage from "../pages/admin/AdminFlightLookupPage";
 
 export default function AppRouter() {
   return (
@@ -21,35 +24,29 @@ export default function AppRouter() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <MainLayout>
-                <HomePage />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/search"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <FlightSearchPage />
-              </MainLayout>
-            </ProtectedRoute>
+            <MainLayout>
+              <FlightSearchPage />
+            </MainLayout>
           }
         />
         <Route
           path="/flights/:flightId/seats"
           element={
-            <ProtectedRoute>
-              <MainLayout>
-                <SeatSelectionPage />
-              </MainLayout>
-            </ProtectedRoute>
+            <MainLayout>
+              <SeatSelectionPage />
+            </MainLayout>
+          }
+        />
+
+        <Route
+          path="/flights/:flightId/details"
+          element={
+            <MainLayout>
+              <FlightDetailsPage />
+            </MainLayout>
           }
         />
         <Route
@@ -102,8 +99,11 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         >
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<AdminOverviewPage />} />
           <Route path="airports" element={<ManageAirports />} />
           <Route path="flights" element={<ManageFlights />} />
+          <Route path="lookup" element={<AdminFlightLookupPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

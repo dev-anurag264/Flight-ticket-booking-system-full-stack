@@ -1,49 +1,71 @@
 import { useAuth } from "../auth/useAuth";
 import { useNavigate, Link } from "react-router-dom";
+import Button from "../components/ui/Button";
+import ThemeToggle from "../components/ui/ThemeToggle";
+
 export default function MainLayout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <span className="text-xl font-bold text-blue-600">
-          Flight-Booking-Portal
-        </span>
-        <div className="flex items-center gap-4">
-          <Link
-            to="/search"
-            className="text-sm text-gray-700 hover:text-blue-600"
-          >
-            Search Flights
-          </Link>
-          <span></span>
-          <Link to="/my-bookings">My Bookings</Link>
-          {user?.role === "ADMIN" && (
-            <Link
-              to="/admin/airports"
-              className="text-sm text-gray-700 hover:text-blue-600"
-            >
-              Admin
-            </Link>
+    <div className="min-h-screen bg-paper-50">
+      <nav className="bg-surface border-b border-slate-300/60 px-6 py-4 flex justify-between items-center">
+        <Link to="/" className="font-flight text-lg font-semibold text-ink-900">
+          EaseFly
+        </Link>
+
+        <div className="flex items-center gap-5 text-sm">
+          <ThemeToggle />
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/my-bookings"
+                className="text-ink-600 hover:text-ink-900"
+              >
+                My Bookings
+              </Link>
+
+              {user?.role === "ADMIN" && (
+                <Link
+                  to="/admin/airports"
+                  className="text-ink-600 hover:text-ink-900"
+                >
+                  Admin
+                </Link>
+              )}
+
+              <span className="text-ink-400">{user?.email}</span>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  logout();
+                  navigate("/");
+                }}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-ink-600 hover:text-ink-900">
+                Log in
+              </Link>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate("/register")}
+              >
+                Sign up
+              </Button>
+            </>
           )}
-          <span className="text-sm text-gray-600">
-            {user?.email} <span className="text-gray-400">({user?.role})</span>
-          </span>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-red-600 hover:underline"
-          >
-            Logout
-          </button>
         </div>
       </nav>
-      <main className="p-6">{children}</main>
+
+      <main className="max-w-5xl mx-auto p-6">{children}</main>
     </div>
   );
 }

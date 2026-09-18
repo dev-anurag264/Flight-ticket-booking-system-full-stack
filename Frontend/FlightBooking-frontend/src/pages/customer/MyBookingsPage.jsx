@@ -56,7 +56,7 @@ export default function MyBookingsPage() {
       )}
 
       {bookings.map((b) => (
-        <div key={b.id} className="bg-white p-4 rounded shadow">
+        <div key={b.id} className="bg-surface p-4 rounded shadow">
           <div className="flex justify-between items-start">
             <div>
               <p className="font-mono font-bold text-lg">{b.pnr}</p>

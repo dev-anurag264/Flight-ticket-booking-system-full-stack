@@ -1,19 +1,33 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { seatApi } from "../../api/seatApi";
+import { useAuth } from "../../auth/useAuth";
 
 export default function SeatSelectionPage() {
   const { flightId } = useParams(); //flights/:flightId/seats"
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [seats, setSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [holding, setHolding] = useState(false);
+  const [flight, setFlight] = useState(null);
+  const location = useLocation();
+  const travelerName = location.state?.travelerName;
 
   useEffect(() => {
     loadSeats();
+    loadFlight();
   }, [flightId]);
 
+  async function loadFlight() {
+    try {
+      const response = await flightApi.getById(flightId);
+      setFlight(response.data);
+    } catch (err) {
+      // non-fatal for seat viewing; passenger-details will re-fetch anyway
+    }
+  }
   async function loadSeats() {
     setLoading(true);
     try {
@@ -27,11 +41,25 @@ export default function SeatSelectionPage() {
   }
   async function handleSeatClick(seat) {
     if (seat.status !== "AVAILABLE" || holding) return;
+
+    if (!isAuthenticated) {
+      navigate("/booking/passenger-details", {
+        state: { seat, flightId, flight, travelerName },
+      });
+      return;
+    }
+
+    await claimSeat(seat);
+  }
+
+  async function claimSeat(seat) {
     setHolding(true);
     setError("");
     try {
       await seatApi.hold(seat.id);
-      navigate("/booking/passenger-details", { state: { seat, flightId } });
+      navigate("/booking/passenger-details", {
+        state: { seat, flightId, flight, travelerName },
+      });
     } catch (err) {
       setError(
         err.response?.data?.message || "This seat is no longer available",
@@ -43,7 +71,7 @@ export default function SeatSelectionPage() {
   }
 
   const statusStyles = {
-    AVAILABLE: "bg-white border-gray-300 hover:bg-blue-50 cursor-pointer",
+    AVAILABLE: "bg-surface border-gray-300 hover:bg-blue-50 cursor-pointer",
     HELD: "bg-yellow-100 border-yellow-300 cursor-not-allowed opacity-60",
     PAYMENT_PENDING:
       "bg-orange-100 border-orange-300 cursor-not-allowed opacity-60",
@@ -61,7 +89,7 @@ export default function SeatSelectionPage() {
 
       <div className="flex gap-4 text-sm">
         <span className="flex items-center gap-1">
-          <span className="w-4 h-4 bg-white border border-gray-300 rounded"></span>{" "}
+          <span className="w-4 h-4 bg-surface border border-gray-300 rounded"></span>{" "}
           Available
         </span>
         <span className="flex items-center gap-1">

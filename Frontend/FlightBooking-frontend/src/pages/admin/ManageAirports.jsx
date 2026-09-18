@@ -56,7 +56,7 @@ export default function ManageAirports() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-4 rounded shadow flex gap-2 flex-wrap"
+        className="bg-surface p-4 rounded shadow flex gap-2 flex-wrap"
       >
         <input
           placeholder="IATA (BLR)"
@@ -99,7 +99,7 @@ export default function ManageAirports() {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <table className="w-full bg-white rounded shadow">
+        <table className="w-full bg-surface rounded shadow">
           <thead>
             <tr className="text-left border-b">
               <th className="p-2">Code</th>
