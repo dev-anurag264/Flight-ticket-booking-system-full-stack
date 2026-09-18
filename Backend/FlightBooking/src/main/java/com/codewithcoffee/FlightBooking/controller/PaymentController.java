@@ -1,11 +1,12 @@
 package com.codewithcoffee.FlightBooking.controller;
 
-import com.codewithcoffee.FlightBooking.dto.SeatHoldRequest;
-import com.codewithcoffee.FlightBooking.dto.SeatResponse;
+
+import com.codewithcoffee.FlightBooking.dto.paymentdto.PaymentRequest;
+import com.codewithcoffee.FlightBooking.dto.paymentdto.PaymentResponse;
 import com.codewithcoffee.FlightBooking.entity.User;
 import com.codewithcoffee.FlightBooking.exceptions.ApiException;
 import com.codewithcoffee.FlightBooking.repository.UserRepository;
-import com.codewithcoffee.FlightBooking.service.SeatService;
+import com.codewithcoffee.FlightBooking.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,16 +18,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/seats")
+@RequestMapping("/api/payments")
 @RequiredArgsConstructor
-public class SeatHoldController {
-    private final UserRepository userRepository;
-    private final SeatService  seatService;
+public class PaymentController {
 
-    @PostMapping("/hold")
-    public ResponseEntity<SeatResponse> hold(@Valid @RequestBody SeatHoldRequest request, Authentication authentication) {
-        User customer = userRepository.findByEmail(authentication.getName())
+    private final PaymentService paymentService;
+    private final UserRepository userRepository;
+
+    @PostMapping
+    public ResponseEntity<PaymentResponse> pay(@Valid @RequestBody PaymentRequest request, Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ApiException( "User not found", HttpStatus.UNAUTHORIZED));
-        return ResponseEntity.ok(seatService.holdSeat(request.getSeatId(), customer.getId()));
+        PaymentResponse response = paymentService.processPayment(user.getId(), request);
+        return ResponseEntity.ok(response);
     }
 }

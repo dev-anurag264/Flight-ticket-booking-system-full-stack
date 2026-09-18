@@ -37,3 +37,15 @@ seat:
   hold:
     duration-minutes: 10
     sweep-interval-ms: 30000
+
+booking:
+  cancellation:
+    min-hours-before-departure: 24
+
+fare:
+  gst-basis-points: 1800        # 18.00% GST, expressed in basis points (1% = 100 bp)
+  airport-fee-paise: 15000
+
+payment:
+  simulation:
+    failure-rate-percent: 20

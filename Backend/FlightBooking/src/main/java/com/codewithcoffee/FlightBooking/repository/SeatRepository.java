@@ -19,7 +19,9 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
         @Modifying
         @Query("""
         UPDATE Seat s
-        SET s.status = com.codewithcoffee.FlightBooking.entity.SeatStatus.AVAILABLE, s.holdExpiresAt = null
+        SET s.status = com.codewithcoffee.FlightBooking.entity.SeatStatus.AVAILABLE,
+        s.holdExpiresAt = null,
+        s.heldByUserId = null
         WHERE s.status = com.codewithcoffee.FlightBooking.entity.SeatStatus.HELD
           AND s.holdExpiresAt < :now
         """)

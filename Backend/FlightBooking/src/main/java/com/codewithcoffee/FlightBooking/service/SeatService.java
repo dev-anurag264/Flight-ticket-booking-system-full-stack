@@ -66,7 +66,7 @@ public class SeatService {
     }
 
     @Transactional
-    public SeatResponse holdSeat(Long seatId) {
+    public SeatResponse holdSeat(Long seatId, Long customerId) {
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new ApiException("Seat does not exist", HttpStatus.NOT_FOUND));
 
@@ -75,6 +75,7 @@ public class SeatService {
         }
 
         seat.setStatus(SeatStatus.HELD);
+        seat.setHeldByUserId(customerId);
         seat.setHoldExpiresAt(LocalDateTime.now(clock).plusMinutes(seatHoldProperties.getDurationMinutes()));
 
         try {
