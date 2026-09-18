@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { flightApi } from "../../api/flightapi";
 import { airportApi } from "../../api/airportapi";
+import DatePicker from "react-datepicker";
 
 const STATUS_OPTIONS = ["SCHEDULED", "DELAYED", "CANCELLED", "DEPARTED"];
 
@@ -149,7 +150,6 @@ export default function ManageFlights() {
           className="border rounded px-2 py-1"
           required
         />
-
         <input
           type="datetime-local"
           value={form.arrivalTime}
