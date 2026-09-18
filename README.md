@@ -2,6 +2,23 @@
 
 A flight reservation and booking platform built as a deep dive into production-grade backend architecture — not a CRUD tutorial project. AeroBook exists to explore, in a real codebase, the problems that actually separate junior from senior backend work: concurrency correctness, stateless authentication and authorization, clean architectural boundaries, and payment/booking consistency — introduced only when a genuine problem in the domain justifies them, never for their own sake.
 
+## 📸 Screenshots
+
+### Home Page
+![Home Page](./screenshots/SelectFlight.png)
+
+### Flight Search
+![Flight Search](./screenshots/SearchAirports.png)
+
+### Seat Selection
+![Seat Selection](./screenshots/SeatSelection.png)
+
+### Passenger Details
+![Passenger Details](./screenshots/PassengerDetails.png)
+
+### Booking Confirmation
+![Booking Confirmation](./screenshots/Payment.png)
+
 ## Tech Stack
 
 **Backend:** Java 17, Spring Boot, Spring Security, JWT (stateless auth), Spring Data JPA / Hibernate, PostgreSQL, Maven, Lombok, Bean Validation, OpenAPI/Swagger, JUnit 5 + Mockito + Testcontainers

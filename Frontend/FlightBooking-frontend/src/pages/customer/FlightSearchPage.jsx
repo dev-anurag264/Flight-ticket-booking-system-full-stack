@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { flightApi } from "../../api/flightapi";
 import { Link } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function FlightSearchPage() {
   const [form, setForm] = useState({ origin: "", destination: "", date: "" });
@@ -50,12 +52,15 @@ export default function FlightSearchPage() {
         </div>
         <div>
           <label className="block text-sm text-gray-600">Date</label>
-          <input
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            className="border rounded px-2 py-1"
-            required
+          <DatePicker
+            selected={form.date ? new Date(form.date) : null}
+            onChange={(date) =>
+              setForm({ ...form, date: date.toISOString().split("T")[0] })
+            }
+            minDate={new Date()}
+            dateFormat="dd MMM yyyy"
+            placeholderText="Select date"
+            className="border rounded px-2 py-1 w-full"
           />
         </div>
         <button
@@ -71,7 +76,8 @@ export default function FlightSearchPage() {
 
       {results && results.length === 0 && (
         <p className="text-gray-600">
-          No flights found for this route and date.
+          Oops! No flights found for the selected route and date. Please try a
+          different search.
         </p>
       )}
 
@@ -91,9 +97,9 @@ export default function FlightSearchPage() {
               </div>
               <Link
                 to={`/flights/${f.id}/seats`}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-orange-500 text-white px-4 py-2 rounded  hover:bg-orange-600"
               >
-                Confirm Booking - ₹{f.baseFare}
+                Book Now - ₹{f.baseFare}
               </Link>
             </div>
           ))}

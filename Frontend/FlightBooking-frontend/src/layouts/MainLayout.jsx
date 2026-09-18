@@ -22,6 +22,8 @@ export default function MainLayout({ children }) {
           >
             Search Flights
           </Link>
+          <span></span>
+          <Link to="/my-bookings">My Bookings</Link>
           {user?.role === "ADMIN" && (
             <Link
               to="/admin/airports"

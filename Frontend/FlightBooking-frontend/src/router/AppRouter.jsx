@@ -12,6 +12,9 @@ import SeatSelectionPage from "../pages/customer/SeatSelectionPage";
 import PaymentPlaceholderPage from "../pages/customer/PaymentPlaceholderPage";
 import PassengerDetailsPage from "../pages/customer/PassengerDetailsPage";
 
+import BookingConfirmationPage from "../pages/customer/BookingConfirmationPage";
+import MyBookingsPage from "../pages/customer/MyBookingsPage";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -65,6 +68,26 @@ export default function AppRouter() {
             <ProtectedRoute>
               <MainLayout>
                 <PaymentPlaceholderPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking/confirmation"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <BookingConfirmationPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <MyBookingsPage />
               </MainLayout>
             </ProtectedRoute>
           }
